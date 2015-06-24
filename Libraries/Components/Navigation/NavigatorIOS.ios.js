@@ -104,6 +104,7 @@ type State = {
   fromIndex: number;
   toIndex: number;
   makingNavigatorRequest: boolean;
+  navBarReload: Boolean;
   updatingAllIndicesAtOrBeyond: number;
 }
 
@@ -308,6 +309,7 @@ var NavigatorIOS = React.createClass({
     // Precompute a pack of callbacks that's frequently generated and passed to
     // instances.
     this.navigator = {
+      updateNavBar:this.updateNavBar,
       push: this.push,
       pop: this.pop,
       popN: this.popN,
@@ -320,6 +322,17 @@ var NavigatorIOS = React.createClass({
     };
   },
 
+  updateNavBar: function (route: Route){
+    if (route !== undefined){
+      var current: Route = this.state.routeStack[this.state.routeStack.length - 1] ;
+      this.state.routeStack[this.state.routeStack.length - 1] = merge(current, route);
+    }
+    
+    this.setState({
+      navBarReload:true,
+      makingNavigatorRequest: true,
+    });
+  },
   getInitialState: function(): State {
     return {
       idStack: [getuid()],
@@ -339,6 +352,7 @@ var NavigatorIOS = React.createClass({
       // Whether or not we are making a navigator request to push/pop. (Used
       // for performance optimization).
       makingNavigatorRequest: false,
+      navBarReload: false,
       // Whether or not we are updating children of navigator and if so (not
       // `null`) which index marks the beginning of all updates. Used for
       // performance optimization.
@@ -587,7 +601,7 @@ var NavigatorIOS = React.createClass({
   _routeToStackItem: function(route: Route, i: number) {
     var Component = route.component;
     var shouldUpdateChild = this.state.updatingAllIndicesAtOrBeyond !== null &&
-      this.state.updatingAllIndicesAtOrBeyond >= i;
+      this.state.updatingAllIndicesAtOrBeyond >= i || this.state.navBarReload;
 
     return (
       <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
@@ -632,6 +646,7 @@ var NavigatorIOS = React.createClass({
     // computation of navigator children.
     var items = shouldRecurseToNavigator ?
       this.state.routeStack.map(this._routeToStackItem) : null;
+      this.state.navBarReload = false;
     return (
       <StaticContainer shouldUpdate={shouldRecurseToNavigator}>
         <NavigatorTransitionerIOS
