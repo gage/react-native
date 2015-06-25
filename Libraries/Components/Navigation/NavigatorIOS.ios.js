@@ -104,7 +104,7 @@ type State = {
   fromIndex: number;
   toIndex: number;
   makingNavigatorRequest: boolean;
-  navBarReload: Boolean;
+  navBarReload: boolean;
   updatingAllIndicesAtOrBeyond: number;
 }
 
